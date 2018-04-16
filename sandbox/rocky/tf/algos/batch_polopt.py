@@ -6,6 +6,7 @@ import tensorflow as tf
 from sandbox.rocky.tf.samplers.batch_sampler import BatchSampler
 from sandbox.rocky.tf.samplers.vectorized_sampler import VectorizedSampler
 from rllab.sampler.utils import rollout
+import rllab.plotter as plotter
 
 
 class BatchPolopt(RLAlgorithm):
@@ -85,6 +86,8 @@ class BatchPolopt(RLAlgorithm):
             sampler_args = dict()
         self.sampler = sampler_cls(self, **sampler_args)
         self.init_opt()
+        if self.plot:
+            plotter.init_plot_tf(self.env)
 
     def start_worker(self):
         self.sampler.start_worker()
@@ -128,7 +131,7 @@ class BatchPolopt(RLAlgorithm):
                 logger.record_tabular('ItrTime', time.time() - itr_start_time)
                 logger.dump_tabular(with_prefix=False)
                 if self.plot:
-                    rollout(self.env, self.policy, animated=True, max_path_length=self.max_path_length)
+                    self.update_plot()
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "
                               "continue...")
@@ -157,4 +160,7 @@ class BatchPolopt(RLAlgorithm):
 
     def optimize_policy(self, itr, samples_data):
         raise NotImplementedError
+
+    def update_plot(self):
+        plotter.update_plot_tf(self.env, self.policy, self.max_path_length)
 
